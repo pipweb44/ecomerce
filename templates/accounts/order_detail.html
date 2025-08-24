@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل الطلب #{{ order.order_number }} - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}" class="text-decoration-none">الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'accounts:my_orders' %}" class="text-decoration-none">طلباتي</a></li>
+            <li class="breadcrumb-item active" aria-current="page">طلب #{{ order.order_number }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">
+                                <i class="bi bi-receipt me-2"></i>
+                                تفاصيل الطلب #{{ order.order_number }}
+                            </h5>
+                            <small class="text-muted">تاريخ الطلب: {{ order.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge bg-{{ order.get_status_display_color }} fs-6">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- مراحل الطلب -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-muted mb-3">مراحل الطلب</h6>
+                            <div class="progress-container">
+                                <div class="row text-center">
+                                    <div class="col">
+                                        <div class="step {% if order.status == 'pending' or order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                                            <i class="bi bi-cart-check"></i>
+                                        </div>
+                                        <small>تم الطلب</small>
+                                    </div>
+                                    <div class="col">
+                                        <div class="step {% if order.status == 'confirmed' or order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
+                                        <small>تم التأكيد</small>
+                                    </div>
+                                    <div class="col">
+                                        <div class="step {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                                            <i class="bi bi-gear"></i>
+                                        </div>
+                                        <small>قيد التحضير</small>
+                                    </div>
+                                    <div class="col">
+                                        <div class="step {% if order.status == 'shipped' or order.status == 'delivered' %}completed{% endif %}">
+                                            <i class="bi bi-truck"></i>
+                                        </div>
+                                        <small>تم الشحن</small>
+                                    </div>
+                                    <div class="col">
+                                        <div class="step {% if order.status == 'delivered' %}completed{% endif %}">
+                                            <i class="bi bi-house-check"></i>
+                                        </div>
+                                        <small>تم التسليم</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- معلومات الطلب -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">معلومات التسليم</h6>
+                            <p class="mb-1"><strong>{{ order.customer_name }}</strong></p>
+                            <p class="mb-1">{{ order.customer_email }}</p>
+                            <p class="mb-1">{{ order.customer_phone }}</p>
+                            <p class="mb-1">{{ order.shipping_address }}</p>
+                            <p class="mb-0">{{ order.shipping_city }}{% if order.shipping_postal_code %}, {{ order.shipping_postal_code }}{% endif %}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">عناصر الطلب</h6>
+                            {% for item in order.items.all %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="text-light">{{ item.product.name }}</span><br>
+                                    <small class="text-muted">الكمية: {{ item.quantity }} × {{ item.price }} ر.س</small>
+                                </div>
+                                <span class="fw-bold">{{ item.total }} ر.س</span>
+                            </div>
+                            {% endfor %}
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <strong>المجموع الكلي:</strong>
+                                <strong class="price">{{ order.total_amount }} ر.س</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if order.notes %}
+                    <div class="mt-4">
+                        <h6 class="text-muted">ملاحظات</h6>
+                        <p class="text-light">{{ order.notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- تاريخ الحالات -->
+                    {% if order.status_history.all %}
+                    <div class="mt-4">
+                        <h6 class="text-muted">تاريخ الحالات</h6>
+                        <div class="timeline">
+                            {% for history in order.status_history.all %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-{{ order.get_status_display_color }}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">{{ history.get_status_display }}</h6>
+                                    <small class="text-muted">{{ history.created_at|date:"d/m/Y H:i" }}</small>
+                                    {% if history.notes %}
+                                        <p class="mb-0 mt-1">{{ history.notes }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- أزرار العمليات -->
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'accounts:my_orders' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-right me-2"></i>
+                            العودة لطلباتي
+                        </a>
+                        {% if order.status == 'pending' %}
+                        <button class="btn btn-outline-danger ms-2" onclick="cancelOrder()">
+                            <i class="bi bi-x-circle me-2"></i>
+                            إلغاء الطلب
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.step {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--dark-border);
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.step.completed {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    color: white;
+}
+
+.progress-container {
+    position: relative;
+}
+
+.progress-container::before {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background-color: var(--dark-border);
+    z-index: 1;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--dark-border);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -37px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--dark-bg);
+}
+
+.timeline-content {
+    background-color: var(--dark-card);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--dark-border);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function cancelOrder() {
+    if (confirm('هل أنت متأكد من إلغاء هذا الطلب؟')) {
+        // يمكن إضافة وظيفة إلغاء الطلب هنا
+        alert('تم إرسال طلب الإلغاء. سيتم التواصل معك قريباً.');
+    }
+}
+</script>
+{% endblock %}

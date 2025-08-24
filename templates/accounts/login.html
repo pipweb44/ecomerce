@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}تسجيل الدخول - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>
+                        تسجيل الدخول
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">
+                                <i class="bi bi-person me-1"></i>
+                                اسم المستخدم
+                            </label>
+                            <input type="text" class="form-control" id="{{ form.username.id_for_label }}" 
+                                   name="{{ form.username.name }}" value="{{ form.username.value|default:'' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">
+                                <i class="bi bi-lock me-1"></i>
+                                كلمة المرور
+                            </label>
+                            <input type="password" class="form-control" id="{{ form.password.id_for_label }}" 
+                                   name="{{ form.password.name }}" required>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                تسجيل الدخول
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="text-muted mb-2">ليس لديك حساب؟</p>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus me-2"></i>
+                            إنشاء حساب جديد
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a href="{% url 'products:home' %}" class="btn btn-link">
+                            <i class="bi bi-arrow-right me-1"></i>
+                            العودة للموقع
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- مميزات تسجيل الدخول -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cart-check display-4 text-primary mb-3"></i>
+                            <h6>طلباتك</h6>
+                            <p class="text-muted small">تتبع جميع طلباتك وحالاتها</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-person-gear display-4 text-success mb-3"></i>
+                            <h6>ملفك الشخصي</h6>
+                            <p class="text-muted small">إدارة بياناتك وعناوينك</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تركيز على حقل اسم المستخدم
+    const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+    if (usernameField) {
+        usernameField.focus();
+    }
+
+    // تحسين تجربة المستخدم
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function() {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<span class="loading me-2"></span>جاري تسجيل الدخول...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

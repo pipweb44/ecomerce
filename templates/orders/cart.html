@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}سلة التسوق - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="section-title">سلة التسوق</h2>
+    
+    {% if cart_items %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {% for item in cart_items %}
+                        <div class="row align-items-center border-bottom py-3" data-product-id="{{ item.product.id }}">
+                            <div class="col-md-2">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid rounded">
+                                {% else %}
+                                    <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-light mb-1">{{ item.product.name }}</h6>
+                                <small class="text-muted">{{ item.product.category.name }}</small>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="price">{{ item.product.get_price }} ر.س</span>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group input-group-sm">
+                                    <button class="btn btn-outline-secondary quantity-btn" type="button" data-action="decrease">-</button>
+                                    <input type="number" class="form-control text-center quantity-input" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}">
+                                    <button class="btn btn-outline-secondary quantity-btn" type="button" data-action="increase">+</button>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <span class="item-total fw-bold">{{ item.total }} ر.س</span>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="{{ item.product.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">ملخص الطلب</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>المجموع الفرعي:</span>
+                            <span id="subtotal">{{ total }} ر.س</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>الشحن:</span>
+                            <span>مجاني</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>المجموع الكلي:</strong>
+                            <strong id="total" class="price">{{ total }} ر.س</strong>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">
+                                <i class="bi bi-credit-card"></i> إتمام الطلب
+                            </a>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-right"></i> متابعة التسوق
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- عداد السلة المخفي للاستخدام في JavaScript -->
+                <span id="cart-count-value" style="display: none;">{{ cart_count }}</span>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
+            <h3 class="text-muted mb-3">سلة التسوق فارغة</h3>
+            <p class="text-muted mb-4">لم تقم بإضافة أي منتجات إلى سلة التسوق بعد</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                <i class="bi bi-shop"></i> ابدأ التسوق
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث الكمية
+    document.querySelectorAll('.quantity-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const row = this.closest('[data-product-id]');
+            const productId = row.dataset.productId;
+            const quantityInput = row.querySelector('.quantity-input');
+            let quantity = parseInt(quantityInput.value);
+            
+            if (action === 'increase') {
+                quantity++;
+            } else if (action === 'decrease' && quantity > 1) {
+                quantity--;
+            }
+            
+            updateCartItem(productId, quantity, row);
+        });
+    });
+    
+    // تحديث الكمية عند تغيير الإدخال
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const row = this.closest('[data-product-id]');
+            const productId = row.dataset.productId;
+            const quantity = parseInt(this.value);
+            
+            if (quantity > 0) {
+                updateCartItem(productId, quantity, row);
+            }
+        });
+    });
+    
+    // حذف عنصر من السلة
+    document.querySelectorAll('.remove-item').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const row = this.closest('[data-product-id]');
+            
+            if (confirm('هل أنت متأكد من حذف هذا المنتج من السلة؟')) {
+                updateCartItem(productId, 0, row);
+            }
+        });
+    });
+    
+    function updateCartItem(productId, quantity, row) {
+        fetch('/orders/update-cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: quantity
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (quantity === 0) {
+                    // حذف الصف
+                    row.remove();
+                    
+                    // التحقق من وجود عناصر أخرى
+                    const remainingItems = document.querySelectorAll('[data-product-id]');
+                    if (remainingItems.length === 0) {
+                        location.reload(); // إعادة تحميل الصفحة لإظهار رسالة السلة الفارغة
+                    }
+                } else {
+                    // تحديث الكمية والإجمالي
+                    const quantityInput = row.querySelector('.quantity-input');
+                    quantityInput.value = quantity;
+                    
+                    // حساب إجمالي العنصر
+                    const priceText = row.querySelector('.price').textContent;
+                    const price = parseFloat(priceText.replace(' ر.س', ''));
+                    const itemTotal = price * quantity;
+                    row.querySelector('.item-total').textContent = itemTotal + ' ر.س';
+                }
+                
+                // تحديث المجموع الكلي
+                document.getElementById('subtotal').textContent = data.total + ' ر.س';
+                document.getElementById('total').textContent = data.total + ' ر.س';
+                
+                // تحديث عداد السلة
+                document.getElementById('cart-count').textContent = data.cart_count;
+                document.getElementById('cart-count-value').textContent = data.cart_count;
+            } else {
+                alert('خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء تحديث السلة');
+        });
+    }
+});
+</script>
+{% endblock %}

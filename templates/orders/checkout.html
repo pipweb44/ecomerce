@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}إتمام الطلب - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="section-title">إتمام الطلب</h2>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">معلومات التسليم</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="customer_name" class="form-label">الاسم الكامل *</label>
+                                <input type="text" class="form-control" id="customer_name" name="customer_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="customer_phone" class="form-label">رقم الهاتف *</label>
+                                <input type="tel" class="form-control" id="customer_phone" name="customer_phone" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="customer_email" class="form-label">البريد الإلكتروني *</label>
+                            <input type="email" class="form-control" id="customer_email" name="customer_email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="shipping_address" class="form-label">عنوان التسليم *</label>
+                            <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3" required placeholder="الشارع، الحي، رقم المبنى"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="shipping_city" class="form-label">المدينة *</label>
+                                <input type="text" class="form-control" id="shipping_city" name="shipping_city" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="shipping_postal_code" class="form-label">الرمز البريدي</label>
+                                <input type="text" class="form-control" id="shipping_postal_code" name="shipping_postal_code">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات إضافية</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="أي ملاحظات خاصة بالطلب"></textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> تأكيد الطلب
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">ملخص الطلب</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart_items %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                            <div>
+                                <small class="text-light">{{ item.product.name }}</small><br>
+                                <small class="text-muted">الكمية: {{ item.quantity }}</small>
+                            </div>
+                        </div>
+                        <span class="text-light">{{ item.total }} ر.س</span>
+                    </div>
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>المجموع الفرعي:</span>
+                        <span>{{ total }} ر.س</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>الشحن:</span>
+                        <span>مجاني</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>المجموع الكلي:</strong>
+                        <strong class="price">{{ total }} ر.س</strong>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <small>سيتم التواصل معك لتأكيد الطلب وتحديد موعد التسليم</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-shield-check text-success"></i> طرق الدفع المتاحة
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="bi bi-cash text-success"></i> الدفع عند الاستلام</li>
+                        <li><i class="bi bi-credit-card text-primary"></i> التحويل البنكي</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // التحقق من صحة النموذج
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // التحقق من صحة البريد الإلكتروني
+        const email = document.getElementById('customer_email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email.value && !emailRegex.test(email.value)) {
+            email.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // التحقق من رقم الهاتف
+        const phone = document.getElementById('customer_phone');
+        const phoneRegex = /^[0-9+\-\s()]+$/;
+        if (phone.value && !phoneRegex.test(phone.value)) {
+            phone.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('يرجى ملء جميع الحقول المطلوبة بشكل صحيح');
+        }
+    });
+    
+    // إزالة رسائل الخطأ عند الكتابة
+    document.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+});
+</script>
+{% endblock %}

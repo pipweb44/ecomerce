@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}الملف الشخصي - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle display-1 text-primary mb-3"></i>
+                    <h5 class="text-light">{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="text-muted">{{ user.email|default:"لم يتم تحديد البريد الإلكتروني" }}</p>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body">
+                    <ul class="nav nav-pills flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-person me-2"></i>
+                                الملف الشخصي
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:my_orders' %}">
+                                <i class="bi bi-bag me-2"></i>
+                                طلباتي
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'accounts:logout' %}">
+                                <i class="bi bi-box-arrow-right me-2"></i>
+                                تسجيل الخروج
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-gear me-2"></i>
+                        تحديث الملف الشخصي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">الاسم الأول</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user.first_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">اسم العائلة</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user.last_name }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ customer.phone }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">المدينة</label>
+                                <input type="text" class="form-control" id="city" name="city" 
+                                       value="{{ customer.city }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">اسم المستخدم</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                                <div class="form-text">لا يمكن تغيير اسم المستخدم</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">العنوان</label>
+                            <textarea class="form-control" id="address" name="address" rows="3">{{ customer.address }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                حفظ التغييرات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- إحصائيات سريعة -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-bag-check display-4 text-success mb-3"></i>
+                            <h4>{{ total_orders }}</h4>
+                            <p class="text-muted">إجمالي الطلبات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-clock-history display-4 text-warning mb-3"></i>
+                            <h4>{{ pending_orders }}</h4>
+                            <p class="text-muted">طلبات في الانتظار</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="bi bi-check-circle display-4 text-primary mb-3"></i>
+                            <h4>{{ delivered_orders }}</h4>
+                            <p class="text-muted">طلبات مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحسين تجربة المستخدم
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function() {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="loading me-2"></span>جاري الحفظ...';
+        submitBtn.disabled = true;
+        
+        // إعادة تفعيل الزر بعد ثانيتين في حالة عدم إعادة التوجيه
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 2000);
+    });
+});
+</script>
+{% endblock %}

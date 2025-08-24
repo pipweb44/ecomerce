@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}الرئيسية - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-white mb-4">مرحباً بك في متجرنا الإلكتروني</h1>
+                <p class="lead text-white-50 mb-4">اكتشف أفضل المنتجات بأفضل الأسعار مع خدمة توصيل سريعة وآمنة</p>
+                <a href="{% url 'products:product_list' %}" class="btn btn-warning btn-lg">
+                    <i class="bi bi-shop"></i> تسوق الآن
+                </a>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="bi bi-cart-check display-1 text-white"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title text-center">الفئات الرئيسية</h2>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-md-4 col-lg-2">
+                <a href="{% url 'products:category_detail' category.slug %}" class="text-decoration-none">
+                    <div class="category-card">
+                        {% if category.image %}
+                            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid mb-3" style="height: 60px; object-fit: cover;">
+                        {% else %}
+                            <i class="bi bi-grid display-4 text-primary mb-3"></i>
+                        {% endif %}
+                        <h6 class="text-light">{{ category.name }}</h6>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Featured Products -->
+{% if featured_products %}
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">المنتجات المميزة</h2>
+        <div class="row g-4">
+            {% for product in featured_products %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card product-card h-100 position-relative">
+                    {% if product.has_discount %}
+                        <span class="discount-badge">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                    
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="card-img-top product-image">
+                    {% else %}
+                        <div class="card-img-top product-image bg-secondary d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image display-4 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title text-light">{{ product.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1">{{ product.short_description|default:product.description|truncatewords:10 }}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    {% if product.has_discount %}
+                                        <span class="original-price">{{ product.price }} ر.س</span><br>
+                                    {% endif %}
+                                    <span class="price">{{ product.get_price }} ر.س</span>
+                                </div>
+                                {% if product.is_in_stock %}
+                                    <span class="badge bg-success">متوفر</span>
+                                {% else %}
+                                    <span class="badge bg-danger">غير متوفر</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> عرض التفاصيل
+                                </a>
+                                {% if product.is_in_stock %}
+                                    <button class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="{{ product.id }}">
+                                        <i class="bi bi-cart-plus"></i> أضف للسلة
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                عرض جميع المنتجات <i class="bi bi-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Products -->
+{% if latest_products %}
+<section class="py-5 bg-dark">
+    <div class="container">
+        <h2 class="section-title">أحدث المنتجات</h2>
+        <div class="row g-4">
+            {% for product in latest_products %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card product-card h-100 position-relative">
+                    {% if product.has_discount %}
+                        <span class="discount-badge">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                    
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="card-img-top product-image">
+                    {% else %}
+                        <div class="card-img-top product-image bg-secondary d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image display-4 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title text-light">{{ product.name }}</h6>
+                        <p class="card-text text-muted small flex-grow-1">{{ product.short_description|default:product.description|truncatewords:10 }}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    {% if product.has_discount %}
+                                        <span class="original-price">{{ product.price }} ر.س</span><br>
+                                    {% endif %}
+                                    <span class="price">{{ product.get_price }} ر.س</span>
+                                </div>
+                                {% if product.is_in_stock %}
+                                    <span class="badge bg-success">متوفر</span>
+                                {% else %}
+                                    <span class="badge bg-danger">غير متوفر</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> عرض التفاصيل
+                                </a>
+                                {% if product.is_in_stock %}
+                                    <button class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="{{ product.id }}">
+                                        <i class="bi bi-cart-plus"></i> أضف للسلة
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة منتج للسلة
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            
+            fetch('/orders/add-to-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // تحديث عداد السلة
+                    document.getElementById('cart-count').textContent = data.cart_count;
+                    
+                    // إظهار رسالة نجاح
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    alert.style.top = '20px';
+                    alert.style.right = '20px';
+                    alert.style.zIndex = '9999';
+                    alert.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(alert);
+                    
+                    // إزالة الرسالة بعد 3 ثوان
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                } else {
+                    alert('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء إضافة المنتج للسلة');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}المنتجات - متجري الإلكتروني{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">البحث</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   value="{{ search_query }}" placeholder="ابحث عن منتج...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">الفئات</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="{% url 'products:product_list' %}" 
+                               class="text-decoration-none {% if not current_category %}text-primary fw-bold{% endif %}">
+                                جميع المنتجات
+                            </a>
+                        </li>
+                        {% for category in categories %}
+                        <li class="mb-2">
+                            <a href="{% url 'products:product_list' %}?category={{ category.slug }}" 
+                               class="text-decoration-none {% if current_category == category.slug %}text-primary fw-bold{% endif %}">
+                                {{ category.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">
+                    {% if search_query %}
+                        نتائج البحث عن "{{ search_query }}"
+                    {% elif current_category %}
+                        {% for category in categories %}
+                            {% if category.slug == current_category %}{{ category.name }}{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        جميع المنتجات
+                    {% endif %}
+                </h2>
+                
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown">
+                        ترتيب حسب
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}sort=name">الاسم</a></li>
+                        <li><a class="dropdown-item" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}sort=price_low">السعر: من الأقل للأعلى</a></li>
+                        <li><a class="dropdown-item" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}sort=price_high">السعر: من الأعلى للأقل</a></li>
+                        <li><a class="dropdown-item" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}sort=newest">الأحدث</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            {% if page_obj %}
+                <div class="row g-4">
+                    {% for product in page_obj %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card product-card h-100 position-relative">
+                            {% if product.has_discount %}
+                                <span class="discount-badge">-{{ product.discount_percentage }}%</span>
+                            {% endif %}
+                            
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="card-img-top product-image">
+                            {% else %}
+                                <div class="card-img-top product-image bg-secondary d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-image display-4 text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title text-light">{{ product.name }}</h6>
+                                <p class="card-text text-muted small flex-grow-1">{{ product.short_description|default:product.description|truncatewords:10 }}</p>
+                                
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            {% if product.has_discount %}
+                                                <span class="original-price">{{ product.price }} ر.س</span><br>
+                                            {% endif %}
+                                            <span class="price">{{ product.get_price }} ر.س</span>
+                                        </div>
+                                        {% if product.is_in_stock %}
+                                            <span class="badge bg-success">متوفر</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">غير متوفر</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i> عرض التفاصيل
+                                        </a>
+                                        {% if product.is_in_stock %}
+                                            <button class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="{{ product.id }}">
+                                                <i class="bi bi-cart-plus"></i> أضف للسلة
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.previous_page_number }}">السابق</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.next_page_number }}">التالي</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-search display-1 text-muted mb-4"></i>
+                    <h3 class="text-muted mb-3">لا توجد منتجات</h3>
+                    <p class="text-muted mb-4">لم يتم العثور على منتجات تطابق البحث</p>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right"></i> عرض جميع المنتجات
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة منتج للسلة
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            
+            fetch('/orders/add-to-cart/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // تحديث عداد السلة
+                    document.getElementById('cart-count').textContent = data.cart_count;
+                    
+                    // إظهار رسالة نجاح
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    alert.style.top = '20px';
+                    alert.style.right = '20px';
+                    alert.style.zIndex = '9999';
+                    alert.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(alert);
+                    
+                    // إزالة الرسالة بعد 3 ثوان
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                } else {
+                    alert('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء إضافة المنتج للسلة');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
