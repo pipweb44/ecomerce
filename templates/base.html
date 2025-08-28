@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="html-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,15 +24,59 @@
             --dark-border: #334155;
         }
 
+        /* Glassmorphism Black Theme */
+        html[data-theme="glassmorphism"],
+        body[data-theme="glassmorphism"],
+        [data-theme="glassmorphism"] {
+            --primary-color: #000000 !important;
+            --secondary-color: #1a1a1a !important;
+            --accent-color: #ffffff !important;
+            --dark-bg: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%) !important;
+            --dark-card: rgba(255, 255, 255, 0.1) !important;
+            --dark-border: rgba(255, 255, 255, 0.2) !important;
+            --glass-bg: rgba(0, 0, 0, 0.3) !important;
+            --glass-border: rgba(255, 255, 255, 0.1) !important;
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+        }
+
         body {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--dark-bg);
+            background: var(--dark-bg);
             color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        html[data-theme="glassmorphism"] body,
+        body[data-theme="glassmorphism"] {
+            background: var(--dark-bg) !important;
+            color: #ffffff !important;
+        }
+
+        html[data-theme="glassmorphism"] body::before,
+        body[data-theme="glassmorphism"]::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+            pointer-events: none;
+            z-index: -1;
         }
 
         .navbar {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="glassmorphism"] .navbar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         .navbar-brand {
@@ -45,6 +89,14 @@
             border: 1px solid var(--dark-border);
             border-radius: 12px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        [data-theme="glassmorphism"] .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         .card:hover {
@@ -111,6 +163,14 @@
         .footer {
             background: linear-gradient(135deg, var(--dark-card), var(--primary-color));
             margin-top: 50px;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="glassmorphism"] .footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
         }
 
         .cart-badge {
@@ -137,6 +197,42 @@
             padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
+        }
+
+        [data-theme="glassmorphism"] .category-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+        }
+
+        /* Theme Switcher Button */
+        .theme-switcher {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .theme-switcher:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        [data-theme="glassmorphism"] .theme-switcher {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
         }
 
         .category-card:hover {
@@ -191,6 +287,13 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    <!-- Theme Switcher -->
+                    <li class="nav-item me-3">
+                        <button class="theme-switcher" id="theme-switcher" title="تبديل الثيم">
+                            <i class="bi bi-palette-fill" id="theme-icon"></i>
+                        </button>
+                    </li>
+                    
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="{% url 'orders:cart' %}">
                             <i class="bi bi-cart3"></i> السلة
@@ -304,7 +407,53 @@
         }
 
         // تحديث عداد السلة عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', updateCartCount);
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+            initThemeSwitcher();
+        });
+
+        // Theme Switcher Functionality - Simplified approach
+        function initThemeSwitcher() {
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const themeIcon = document.getElementById('theme-icon');
+            const body = document.body;
+
+            if (!themeSwitcher || !themeIcon) {
+                console.log('Theme switcher elements not found');
+                return;
+            }
+
+            // Load saved theme from localStorage
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme, body, themeIcon);
+
+            // Theme switcher event listener
+            themeSwitcher.addEventListener('click', function() {
+                const currentTheme = localStorage.getItem('theme') || 'dark';
+                const newTheme = (currentTheme === 'glassmorphism') ? 'dark' : 'glassmorphism';
+                
+                console.log('Switching from', currentTheme, 'to', newTheme);
+                
+                applyTheme(newTheme, body, themeIcon);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+
+        function applyTheme(theme, body, themeIcon) {
+            console.log('Applying theme:', theme);
+            
+            if (theme === 'glassmorphism') {
+                document.documentElement.setAttribute('data-theme', 'glassmorphism');
+                body.setAttribute('data-theme', 'glassmorphism');
+                themeIcon.className = 'bi bi-moon-stars-fill';
+                console.log('Glassmorphism theme applied to html and body');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                body.removeAttribute('data-theme');
+                themeIcon.className = 'bi bi-palette-fill';
+                console.log('Dark theme applied - removed data-theme attributes');
+            }
+        }
     </script>
     
     {% block extra_js %}{% endblock %}
